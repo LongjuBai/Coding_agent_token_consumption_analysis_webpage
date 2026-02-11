@@ -381,6 +381,32 @@
           Asking the agent to estimate its own token usage achieves weak-to-moderate correlations with ground truth across models.
           Output-token prediction tends to be easier than input-token prediction.
         </p>
+
+        <div class="table-container" style="margin-top: 1.5rem;">
+          <table class="table is-striped is-fullwidth is-hoverable">
+            <thead>
+              <tr>
+                <th>Model</th>
+                <th>Corr (Input, Pred vs GT)</th>
+                <th>Corr (Output, Pred vs GT)</th>
+                <th>Prediction Cost / Task Cost</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>Sonnet-3.7</td><td>0.2397</td><td>0.2104</td><td>2.2868</td></tr>
+              <tr><td>Sonnet-4</td><td>0.2793</td><td>0.3260</td><td>2.0875</td></tr>
+              <tr><td>Sonnet-4.5</td><td><strong>0.3394</strong></td><td><strong>0.3911</strong></td><td>0.3203</td></tr>
+              <tr><td>GPT-5</td><td>0.2564</td><td>0.3184</td><td>0.4674</td></tr>
+              <tr><td>GPT-5.2</td><td>0.2436</td><td>0.2584</td><td><strong>0.0516</strong></td></tr>
+              <tr><td>Kimi K2</td><td><strong>0.3768</strong></td><td>0.1173</td><td>0.1919</td></tr>
+              <tr><td>Qwen3-Coder</td><td>0.2059</td><td>0.2100</td><td>–</td></tr>
+              <tr><td>Gemini 3</td><td>0.0463</td><td>0.0445</td><td>0.3589</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="has-text-centered is-size-7" style="margin-top: 0.5rem;">
+          Pearson correlations between predicted and ground-truth token counts, plus relative overhead of self-prediction.
+        </p>
       </div>
 
     </div>
@@ -388,46 +414,107 @@
 </section>
 
 
-<!-- Self-prediction table -->
-<section class="section is-light">
+
+
+
+
+
+
+
+
+<!-- Interactive Token Guessing Game -->
+<section class="section is-light" id="TokenGuessingGame">
   <div class="container is-max-desktop">
-    <h2 class="title is-3 has-text-centered">Self-Prediction Results (Table 2)</h2>
-
-    <div class="table-container">
-      <table class="table is-striped is-fullwidth is-hoverable">
-        <thead>
-          <tr>
-            <th>Model</th>
-            <th>Corr (Input, Pred vs GT)</th>
-            <th>Corr (Output, Pred vs GT)</th>
-            <th>Prediction Cost / Task Cost</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr><td>Sonnet-3.7</td><td>0.2397</td><td>0.2104</td><td>2.2868</td></tr>
-          <tr><td>Sonnet-4</td><td>0.2793</td><td>0.3260</td><td>2.0875</td></tr>
-          <tr><td>Sonnet-4.5</td><td><strong>0.3394</strong></td><td><strong>0.3911</strong></td><td>0.3203</td></tr>
-          <tr><td>GPT-5</td><td>0.2564</td><td>0.3184</td><td>0.4674</td></tr>
-          <tr><td>GPT-5.2</td><td>0.2436</td><td>0.2584</td><td><strong>0.0516</strong></td></tr>
-          <tr><td>Kimi K2</td><td><strong>0.3768</strong></td><td>0.1173</td><td>0.1919</td></tr>
-          <tr><td>Qwen3-Coder</td><td>0.2059</td><td>0.2100</td><td>–</td></tr>
-          <tr><td>Gemini 3</td><td>0.0463</td><td>0.0445</td><td>0.3589</td></tr>
-        </tbody>
-      </table>
+    <h2 class="title is-3 has-text-centered">Can You Guess the Token Cost?</h2>
+    <p class="subtitle has-text-centered">Test your intuition about agent token consumption</p>
+    
+    <div class="box" id="guessingGameContainer">
+      <!-- Problem Display -->
+      <div id="problemDisplay" style="display: none;">
+        <h3 class="title is-5">Problem Instance</h3>
+        <div class="field">
+          <label class="label">Problem ID</label>
+          <div class="control">
+            <input class="input" type="text" id="problemId" readonly>
+          </div>
+        </div>
+        <div class="field">
+          <label class="label">Problem Statement</label>
+          <div class="control">
+            <textarea class="textarea" id="problemStatement" readonly rows="6" style="background-color: #f5f5f5;"></textarea>
+          </div>
+        </div>
+        
+        <!-- Guess Form -->
+        <div class="field is-grouped" style="margin-top: 1.5rem;">
+          <div class="field-body">
+            <div class="field">
+              <label class="label">Your Guess: Total Tokens</label>
+              <div class="control">
+                <input class="input" type="number" id="guessTokens" placeholder="Enter total tokens" min="0" step="1000">
+              </div>
+            </div>
+            <div class="field">
+              <label class="label">Your Guess: Total Cost ($)</label>
+              <div class="control">
+                <input class="input" type="number" id="guessCost" placeholder="Enter cost in dollars" min="0" step="0.01">
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="field is-grouped">
+          <div class="control">
+            <button class="button is-primary" id="submitGuess">Submit Guess</button>
+          </div>
+          <div class="control">
+            <button class="button is-light" id="newProblem">New Problem</button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Results Display -->
+      <div id="resultsDisplay" style="display: none;">
+        <h3 class="title is-5">Actual Results</h3>
+        
+        <div class="notification" id="guessComparison"></div>
+        
+        <div class="table-container" style="overflow-x: auto;">
+          <table class="table is-striped is-fullwidth">
+            <thead>
+              <tr>
+                <th>Model</th>
+                <th>Input Tokens</th>
+                <th>Output Tokens</th>
+                <th>Total Tokens</th>
+                <th>Rounds</th>
+                <th>Cost ($)</th>
+              </tr>
+            </thead>
+            <tbody id="resultsTableBody">
+            </tbody>
+          </table>
+        </div>
+        
+        <div class="field is-grouped" style="margin-top: 1rem;">
+          <div class="control">
+            <button class="button is-primary" id="tryAnother">Try Another Problem</button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Initial State -->
+      <div id="initialState">
+        <p class="has-text-centered">Click the button below to start guessing!</p>
+        <div class="field has-text-centered" style="margin-top: 1rem;">
+          <div class="control">
+            <button class="button is-primary is-large" id="startGame">Start Guessing Game</button>
+          </div>
+        </div>
+      </div>
     </div>
-
-    <p class="has-text-centered is-size-7">
-      Pearson correlations between predicted and ground-truth token counts, plus relative overhead of self-prediction.
-    </p>
   </div>
 </section>
-
-
-
-
-
-
-
 
 <!--BibTex citation -->
   <section class="section" id="BibTeX">
