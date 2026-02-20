@@ -691,24 +691,39 @@ function initGuessingGame() {
     // Check if elements exist
     const startBtn = document.getElementById('startGame');
     if (!startBtn) {
-        console.error('Start game button not found');
+        console.log('Start game button not found - not on game page');
         return;
     }
     
+    // Add click handler immediately (even before CSV loads)
+    startBtn.addEventListener('click', () => {
+        console.log('Start game button clicked');
+        if (csvData.length === 0) {
+            alert('Loading problem data... Please wait a moment and try again.');
+            // Try to load data if not loaded yet
+            loadCSVData().then(() => {
+                const problem = getRandomProblem();
+                if (problem) {
+                    displayProblem(problem);
+                } else {
+                    alert('No problems available. Please refresh the page.');
+                }
+            }).catch(() => {
+                alert('Error loading problem data. Please refresh the page.');
+            });
+            return;
+        }
+        const problem = getRandomProblem();
+        if (problem) {
+            displayProblem(problem);
+        } else {
+            alert('No problems available. Please wait for data to load or refresh the page.');
+        }
+    });
+    
     // Load both CSV files
     Promise.all([loadCSVData(), loadPredictionsData()]).then(() => {
-        console.log('CSV data loaded, setting up event listeners');
-        
-        // Start game button
-        startBtn.addEventListener('click', () => {
-            console.log('Start game button clicked');
-            const problem = getRandomProblem();
-            if (problem) {
-                displayProblem(problem);
-            } else {
-                alert('No problems available. Please wait for data to load or refresh the page.');
-            }
-        });
+        console.log('CSV data loaded successfully');
         
         // New problem button
         const newProblemBtn = document.getElementById('newProblem');
@@ -761,25 +776,33 @@ function initGuessingGame() {
     });
 }
 
-$(document).ready(function() {
+// Initialize when DOM is ready (works with or without jQuery)
+function initializePage() {
     // Check for click events on the navbar burger icon
 
-    var options = {
-		slidesToScroll: 1,
-		slidesToShow: 1,
-		loop: true,
-		infinite: true,
-		autoplay: true,
-		autoplaySpeed: 5000,
+    // Initialize carousel if it exists
+    if (typeof bulmaCarousel !== 'undefined') {
+        var options = {
+            slidesToScroll: 1,
+            slidesToShow: 1,
+            loop: true,
+            infinite: true,
+            autoplay: true,
+            autoplaySpeed: 5000,
+        }
+        // Initialize all div with carousel class
+        var carousels = bulmaCarousel.attach('.carousel', options);
     }
-
-	// Initialize all div with carousel class
-    var carousels = bulmaCarousel.attach('.carousel', options);
 	
-    bulmaSlider.attach();
+    // Initialize slider if it exists
+    if (typeof bulmaSlider !== 'undefined') {
+        bulmaSlider.attach();
+    }
     
-    // Setup video autoplay for carousel
-    setupVideoCarouselAutoplay();
+    // Setup video autoplay for carousel if function exists
+    if (typeof setupVideoCarouselAutoplay === 'function') {
+        setupVideoCarouselAutoplay();
+    }
     
     // Initialize guessing game (only if on game page)
     initGuessingGame();
@@ -805,5 +828,16 @@ $(document).ready(function() {
     window.addEventListener('focus', () => {
         updateLeaderboard();
     });
+}
 
-})
+// Use jQuery if available, otherwise use DOMContentLoaded
+if (typeof $ !== 'undefined') {
+    $(document).ready(initializePage);
+} else {
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initializePage);
+    } else {
+        // DOM is already ready
+        initializePage();
+    }
+}
