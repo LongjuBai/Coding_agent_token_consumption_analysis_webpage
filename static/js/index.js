@@ -1,9 +1,32 @@
 window.HELP_IMPROVE_VIDEOJS = false;
+let startGamePending = false;
+
+function triggerStartGame(e) {
+    if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+
+    if (typeof handleStartGame === 'function') {
+        handleStartGame();
+    } else {
+        // If initialization has not finished, queue one start request.
+        startGamePending = true;
+    }
+}
+
+// Ensure the game button still works even if page init ordering changes.
+window.startGameClick = function(e) {
+    console.log('Start game button clicked (global fallback)');
+    triggerStartGame(e);
+    return false;
+};
 
 // More Works Dropdown Functionality
 function toggleMoreWorks() {
     const dropdown = document.getElementById('moreWorksDropdown');
     const button = document.querySelector('.more-works-btn');
+    if (!dropdown || !button) return;
     
     if (dropdown.classList.contains('show')) {
         dropdown.classList.remove('show');
@@ -16,11 +39,18 @@ function toggleMoreWorks() {
 
 // Close dropdown when clicking outside
 document.addEventListener('click', function(event) {
+    const startBtn = event.target && event.target.closest ? event.target.closest('#startGame') : null;
+    if (startBtn) {
+        console.log('Start game button clicked (delegated handler)');
+        triggerStartGame(event);
+        return;
+    }
+
     const container = document.querySelector('.more-works-container');
     const dropdown = document.getElementById('moreWorksDropdown');
     const button = document.querySelector('.more-works-btn');
     
-    if (container && !container.contains(event.target)) {
+    if (container && dropdown && button && !container.contains(event.target)) {
         dropdown.classList.remove('show');
         button.classList.remove('active');
     }
@@ -31,8 +61,10 @@ document.addEventListener('keydown', function(event) {
     if (event.key === 'Escape') {
         const dropdown = document.getElementById('moreWorksDropdown');
         const button = document.querySelector('.more-works-btn');
-        dropdown.classList.remove('show');
-        button.classList.remove('active');
+        if (dropdown && button) {
+            dropdown.classList.remove('show');
+            button.classList.remove('active');
+        }
     }
 });
 
@@ -40,9 +72,9 @@ document.addEventListener('keydown', function(event) {
 function copyBibTeX() {
     const bibtexElement = document.getElementById('bibtex-code');
     const button = document.querySelector('.copy-bibtex-btn');
-    const copyText = button.querySelector('.copy-text');
+    const copyText = button ? button.querySelector('.copy-text') : null;
     
-    if (bibtexElement) {
+    if (bibtexElement && button && copyText) {
         navigator.clipboard.writeText(bibtexElement.textContent).then(function() {
             // Success feedback
             button.classList.add('copied');
@@ -83,6 +115,7 @@ function scrollToTop() {
 // Show/hide scroll to top button
 window.addEventListener('scroll', function() {
     const scrollButton = document.querySelector('.scroll-to-top');
+    if (!scrollButton) return;
     if (window.pageYOffset > 300) {
         scrollButton.classList.add('visible');
     } else {
@@ -686,17 +719,6 @@ function updateLeaderboard() {
     }).join('');
 }
 
-// Global function for inline onclick handler
-window.startGameClick = function(e) {
-    if (e) {
-        e.preventDefault();
-        e.stopPropagation();
-    }
-    console.log('Start game button clicked (inline handler)');
-    handleStartGame();
-    return false;
-};
-
 // Shared function to handle start game logic
 function handleStartGame() {
     if (csvData.length === 0) {
@@ -721,6 +743,11 @@ function handleStartGame() {
     } else {
         alert('No problems available. Please wait for data to load or refresh the page.');
     }
+}
+
+if (startGamePending) {
+    startGamePending = false;
+    handleStartGame();
 }
 
 // Initialize guessing game
