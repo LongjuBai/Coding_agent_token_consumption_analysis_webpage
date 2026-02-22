@@ -1,5 +1,6 @@
 window.HELP_IMPROVE_VIDEOJS = false;
 let startGamePending = false;
+const DATA_VERSION = '20260222c';
 
 function triggerStartGame(e) {
     if (e) {
@@ -248,21 +249,22 @@ function parseCSVLine(line) {
 // Load CSV data
 async function loadCSVData() {
     try {
-        // Prefer updated data files first; keep fallback names for compatibility.
+        // Force latest dataset file and bypass stale browser/CDN cache.
         const paths = [
-            'success_subset_data_new.csv',
-            './success_subset_data_new.csv',
-            '../success_subset_data_new.csv',
-            'success_subset_data.csv',
-            './success_subset_data.csv',
-            '../success_subset_data.csv'
+            `success_subset_data_new.csv?v=${DATA_VERSION}`,
+            `./success_subset_data_new.csv?v=${DATA_VERSION}`,
+            `../success_subset_data_new.csv?v=${DATA_VERSION}`
         ];
         
         let response = null;
+        let loadedPath = null;
         for (const path of paths) {
             try {
                 response = await fetch(path);
-                if (response.ok) break;
+                if (response.ok) {
+                    loadedPath = path;
+                    break;
+                }
             } catch (e) {
                 continue;
             }
@@ -274,7 +276,7 @@ async function loadCSVData() {
         
         const text = await response.text();
         csvData = parseCSV(text);
-        console.log(`Loaded ${csvData.length} problems`);
+        console.log(`Loaded ${csvData.length} problems from ${loadedPath}`);
     } catch (error) {
         console.error('Error loading CSV:', error);
         alert('Error loading problem data. Please make sure success_subset_data_new.csv is accessible in the repository.');
@@ -285,19 +287,20 @@ async function loadCSVData() {
 async function loadPredictionsData() {
     try {
         const paths = [
-            'all_models_averaged_predictions_new.csv',
-            './all_models_averaged_predictions_new.csv',
-            '../all_models_averaged_predictions_new.csv',
-            'all_models_averaged_predictions.csv',
-            './all_models_averaged_predictions.csv',
-            '../all_models_averaged_predictions.csv'
+            `all_models_averaged_predictions_new.csv?v=${DATA_VERSION}`,
+            `./all_models_averaged_predictions_new.csv?v=${DATA_VERSION}`,
+            `../all_models_averaged_predictions_new.csv?v=${DATA_VERSION}`
         ];
         
         let response = null;
+        let loadedPath = null;
         for (const path of paths) {
             try {
                 response = await fetch(path);
-                if (response.ok) break;
+                if (response.ok) {
+                    loadedPath = path;
+                    break;
+                }
             } catch (e) {
                 continue;
             }
@@ -310,7 +313,7 @@ async function loadPredictionsData() {
         
         const text = await response.text();
         predictionsData = parseCSV(text);
-        console.log(`Loaded ${predictionsData.length} prediction records`);
+        console.log(`Loaded ${predictionsData.length} prediction records from ${loadedPath}`);
     } catch (error) {
         console.error('Error loading predictions CSV:', error);
         // Don't alert, just log - predictions are optional
