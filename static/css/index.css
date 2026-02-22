@@ -707,6 +707,21 @@ code {
   }
 }
 
+/* Keep paired figure panels at identical display height on desktop. */
+.equal-height-plot {
+  display: block;
+  width: 100%;
+  height: 320px;
+  object-fit: contain;
+  margin: 0 auto;
+}
+
+@media screen and (max-width: 768px) {
+  .equal-height-plot {
+    height: auto;
+  }
+}
+
 /* Animation for page load */
 @keyframes fadeInUp {
   from {
@@ -748,6 +763,5 @@ a:focus {
     box-shadow: none !important;
   }
 }
-
 
 
