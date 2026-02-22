@@ -204,14 +204,14 @@
                         </a>
                       </span>
                     
-                      <!-- Dataset -->
+                      <!-- Hugging Face -->
                       <span class="link-block">
-                        <a href="#" onclick="alert('Dataset will be released after publication.'); return false;"
+                        <a href="https://huggingface.co/datasets" target="_blank" rel="noopener noreferrer"
                            class="external-link button is-normal is-rounded is-dark">
                           <span class="icon">
                             <i class="fas fa-database"></i>
                           </span>
-                          <span>Dataset</span>
+                          <span>Hugging Face</span>
                         </a>
                       </span>
                     
@@ -257,8 +257,10 @@
       <div class="box">
         <h3 class="title is-5">1) Agentic coding is uniquely expensive</h3>
         <p>
-          Compared with code reasoning and coding chat, agentic coding exhibits orders-of-magnitude higher token usage per user input,
-          driven primarily by <strong>input tokens</strong>.
+          Comparison of three coding paradigms: <em>Code Reasoning</em> (single-turn problem solving without tool interaction),
+          <em>Code Chat</em> (multi-turn dialogue with moderate response expansion), and <em>Coding Agent</em> (tool-augmented,
+          repository-level exploration with long-horizon context). Agentic coding tasks consume substantially more tokens and incur
+          significantly higher monetary costs than the other two paradigms.
         </p>
 
         <!-- Figure 1 -->
@@ -283,14 +285,14 @@
 
         <!-- Figure 2 (two panels) -->
         <div class="columns is-variable is-4 is-multiline is-centered" style="margin-top: 0.75rem;">
-          <div class="column is-6">
+          <div class="column is-12-mobile is-5-desktop">
             <figure class="image">
-              <img src="static/images/fig2a.png" alt="Figure 2a: Average token cost across models" loading="lazy">
+              <img src="static/images/fig2a.png" alt="Figure 2a: Average token cost across models" loading="lazy" style="display:block; width:100%; max-width:460px; margin:0 auto;">
             </figure>
           </div>
-          <div class="column is-6">
+          <div class="column is-12-mobile is-7-desktop">
             <figure class="image">
-              <img src="static/images/fig2b_variance.png" alt="Figure 2b: Variability of token usage across problems and runs" loading="lazy">
+              <img src="static/images/fig2b_variance.png" alt="Figure 2b: Variability of token usage across problems and runs" loading="lazy" style="display:block; width:100%; max-width:620px; margin:0 auto;">
             </figure>
           </div>
         </div>
@@ -308,14 +310,14 @@
 
         <!-- Figure 3 (two panels) -->
         <div class="columns is-variable is-4 is-multiline is-centered" style="margin-top: 0.75rem;">
-          <div class="column is-6">
+          <div class="column is-12-mobile is-6-desktop">
             <figure class="image">
-              <img src="static/images/fig3a.png" alt="Figure 3a: Accuracy vs mean prompt tokens" loading="lazy">
+              <img src="static/images/fig3a.png" alt="Figure 3a: Accuracy vs mean prompt tokens" loading="lazy" style="display:block; width:100%; max-width:520px; margin:0 auto;">
             </figure>
           </div>
-          <div class="column is-6">
+          <div class="column is-12-mobile is-6-desktop">
             <figure class="image">
-              <img src="static/images/fig3b.png" alt="Figure 3b: Accuracy by within-problem cost bins" loading="lazy">
+              <img src="static/images/fig3b.png" alt="Figure 3b: Accuracy by within-problem cost bins" loading="lazy" style="display:block; width:100%; max-width:520px; margin:0 auto;">
             </figure>
           </div>
         </div>
@@ -335,7 +337,7 @@
         <div class="columns is-centered" style="margin-top: 0.75rem;">
           <div class="column is-10">
             <figure class="image">
-              <img src="static/images/fig5_difficulty_vs_cost.png" alt="Figure 5: Token and tool usage across difficulty levels" loading="lazy">
+              <img src="static/images/fig5.png" alt="Figure 5: Token and tool usage across difficulty levels" loading="lazy">
             </figure>
             <p class="has-text-centered is-size-7" style="margin-top: 0.5rem;">
               <strong>Difficulty labels only weakly align with agent resource expenditure.</strong>
