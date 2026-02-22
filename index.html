@@ -233,10 +233,10 @@
         <h2 class="title is-3">Abstract</h2>
         <div class="content has-text-justified">
           <p>
-            AI agents offer substantial opportunities to increase human productivity across many tasks. However, their use in complex workflows also drives rapid growth in LLM token consumption. When agents are deployed on tasks that can require millions of tokens, two questions naturally arise: <strong>how do agents consume LLM tokens, and can we predict token usage before task execution?</strong> In this paper, we use the OpenHands coding agent as a case study and present the first empirical analysis of agent token consumption patterns using agent trajectories. We further explore the possibility of predicting token costs before task execution.
+            AI agents have been widely adopted in daily human tasks. However, their use in complex workflows also drives rapid growth in LLM token consumption.\footnote{In this paper. we use ``token consumption'' to refer to both input and output tokens used by LLM agents} When agents are deployed on tasks that can require millions of tokens, three questions naturally arise: \textbf{(1) Where do AI Agents spend the tokens? (2) What models are more token efficient? (3) Can we predict the token usage before task execution?} In this paper, we use the OpenHands coding agent as a case study and present the first quantitative analysis of agent token consumption patterns using agent trajectories on SWE-Bench. We further explore the possibility of predicting token costs before task execution.
           </p>
           <p>
-            We find that (1) Agent token consumption has inherent randomness even when executing the same tasks; (2) Unlike chat and reasoning tasks, input tokens dominate overall consumption and cost, even with token caching; (3) Predicting output-token amounts and the range of total consumption can achieve weak-to-moderate correlation, offering limited but nontrivial predictive signal. Surprisingly, we also find that (4) Higher token usage does not lead to higher accuracy, as tasks and runs that cost more tokens are usually associated with lower accuracy. We believe our study provides new and useful insights that can impact decisions around token consumptions for the growing number of AI agentic tasks.
+            We find that (1) Agent token consumption has inherent randomness even when executing the same tasks; (2) Unlike chat and reasoning tasks, input tokens dominate overall consumption and cost, even with token caching; (3) Predicting output-token amounts and the range of total consumption can achieve weak-to-moderate correlation, offering limited but nontrivial predictive signal. Surprisingly, we also find that (4) Higher token usage does not lead to higher accuracy, as tasks and runs that cost more tokens are usually associated with lower accuracy. We believe our study provides new and useful insights that can impact decisions around token consumptions for the growing number of AI agentic tasks.We find that (1) Agent token consumption has inherent randomness even when executing the same tasks; (2) Unlike chat and reasoning tasks, input tokens dominate overall consumption and cost, even with token caching; (3) Predicting output-token amounts and the range of total consumption can achieve weak-to-moderate correlation, offering limited but nontrivial predictive signal. Surprisingly, we also find that (4) Higher token usage does not lead to higher accuracy, as tasks and runs that cost more tokens are usually associated with lower accuracy. We believe our study provides new and useful insights that can impact decisions around token consumptions for the growing number of AI agentic tasks.
           </p>
         </div>
       </div>
@@ -381,31 +381,17 @@
           Output-token prediction tends to be easier than input-token prediction.
         </p>
 
-        <div class="table-container" style="margin-top: 1.5rem;">
-          <table class="table is-striped is-fullwidth is-hoverable">
-            <thead>
-              <tr>
-                <th>Model</th>
-                <th>Corr (Input, Pred vs GT)</th>
-                <th>Corr (Output, Pred vs GT)</th>
-                <th>Prediction Cost / Task Cost</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr><td>Sonnet-3.7</td><td>0.2397</td><td>0.2104</td><td>2.2868</td></tr>
-              <tr><td>Sonnet-4</td><td>0.2793</td><td>0.3260</td><td>2.0875</td></tr>
-              <tr><td>Sonnet-4.5</td><td><strong>0.3394</strong></td><td><strong>0.3911</strong></td><td>0.3203</td></tr>
-              <tr><td>GPT-5</td><td>0.2564</td><td>0.3184</td><td>0.4674</td></tr>
-              <tr><td>GPT-5.2</td><td>0.2436</td><td>0.2584</td><td><strong>0.0516</strong></td></tr>
-              <tr><td>Kimi K2</td><td><strong>0.3768</strong></td><td>0.1173</td><td>0.1919</td></tr>
-              <tr><td>Qwen3-Coder</td><td>0.2059</td><td>0.2100</td><td>–</td></tr>
-              <tr><td>Gemini 3</td><td>0.0463</td><td>0.0445</td><td>0.3589</td></tr>
-            </tbody>
-          </table>
+        <!-- Figure 7 -->
+        <div class="columns is-centered" style="margin-top: 0.75rem;">
+          <div class="column is-10">
+            <figure class="image">
+              <img src="static/images/fig7.png" alt="Self-prediction results showing correlations between predicted and ground-truth token counts" loading="lazy">
+            </figure>
+            <p class="has-text-centered is-size-7" style="margin-top: 0.5rem;">
+              <strong>Pearson correlations between predicted and ground-truth token counts, plus relative overhead of self-prediction.</strong>
+            </p>
+          </div>
         </div>
-        <p class="has-text-centered is-size-7" style="margin-top: 0.5rem;">
-          Pearson correlations between predicted and ground-truth token counts, plus relative overhead of self-prediction.
-        </p>
       </div>
 
     </div>
