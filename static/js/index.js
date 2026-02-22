@@ -726,8 +726,8 @@ function updateLeaderboard() {
     // Sort by combined error (ascending)
     guessesWithErrors.sort((a, b) => a.combinedError - b.combinedError);
     
-    // Take top 50
-    const topGuesses = guessesWithErrors.slice(0, 50);
+    // Take top 10
+    const topGuesses = guessesWithErrors.slice(0, 10);
     
     leaderboardBody.innerHTML = topGuesses.map((guess, index) => {
         const rank = index + 1;
