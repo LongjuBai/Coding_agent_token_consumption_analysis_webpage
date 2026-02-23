@@ -375,13 +375,48 @@ function getAllModelStats(problem) {
     })).filter(model => model.total > 0); // Only show models with data
 }
 
+// Build GitHub issue URL from SWE-bench problem id format: org__repo-number
+function getIssueUrlFromProblemId(problemId) {
+    if (typeof problemId !== 'string') return null;
+    const [org, repoAndNumber] = problemId.trim().split('__');
+    if (!org || !repoAndNumber) return null;
+
+    const dashIndex = repoAndNumber.lastIndexOf('-');
+    if (dashIndex <= 0 || dashIndex === repoAndNumber.length - 1) return null;
+
+    const repo = repoAndNumber.slice(0, dashIndex).trim();
+    const number = repoAndNumber.slice(dashIndex + 1).trim();
+    if (!repo || !/^\d+$/.test(number)) return null;
+
+    return `https://github.com/${org}/${repo}/issues/${number}`;
+}
+
 // Display problem
 function displayProblem(problem) {
     currentProblem = problem;
-    document.getElementById('problemId').value = problem.problem_id || '';
+    const problemId = problem.problem_id || '';
+    document.getElementById('problemId').value = problemId;
     document.getElementById('problemStatement').value = problem.problem_statement || '';
     document.getElementById('guessTokens').value = '';
     document.getElementById('guessCost').value = '';
+
+    const problemIssueLink = document.getElementById('problemIssueLink');
+    if (problemIssueLink) {
+        const issueUrl = getIssueUrlFromProblemId(problemId);
+        if (issueUrl) {
+            problemIssueLink.href = issueUrl;
+            problemIssueLink.textContent = 'Open original GitHub issue';
+            problemIssueLink.style.pointerEvents = 'auto';
+            problemIssueLink.style.opacity = '1';
+            problemIssueLink.setAttribute('aria-disabled', 'false');
+        } else {
+            problemIssueLink.href = '#';
+            problemIssueLink.textContent = 'Issue link not available';
+            problemIssueLink.style.pointerEvents = 'none';
+            problemIssueLink.style.opacity = '0.6';
+            problemIssueLink.setAttribute('aria-disabled', 'true');
+        }
+    }
     
     document.getElementById('initialState').style.display = 'none';
     document.getElementById('problemDisplay').style.display = 'block';
