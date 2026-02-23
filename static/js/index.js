@@ -1,6 +1,6 @@
 window.HELP_IMPROVE_VIDEOJS = false;
 let startGamePending = false;
-const DATA_VERSION = '20260222c';
+const DATA_VERSION = '20260222d';
 
 function triggerStartGame(e) {
     if (e) {
