@@ -1,6 +1,6 @@
 window.HELP_IMPROVE_VIDEOJS = false;
 let startGamePending = false;
-const DATA_VERSION = '20260222f';
+const DATA_VERSION = '20260222g';
 const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzMJ-o51VSfQNhBPcnoWcBcBbi2ZNMLTAJX__9BJSq4tnMj-5yH_5mQ8VFNFxKCqVcM/exec';
 
 
@@ -746,17 +746,20 @@ function normalizeGuessRecord(raw) {
 function mergeGuesses(localGuesses, remoteGuesses) {
     const deduped = new Map();
     const combined = [...remoteGuesses, ...localGuesses];
+    const stableNumber = (value) => Number.isFinite(value) ? value.toFixed(6) : 'NaN';
 
     combined.forEach((guess) => {
         const normalized = normalizeGuessRecord(guess);
         if (!normalized) return;
+
+        // De-duplicate across local + remote copies of the same submission.
+        // Use rounded numeric fields to avoid tiny float representation mismatches.
         const key = [
             normalized.problemId,
-            normalized.guessTokens,
-            normalized.guessCost,
-            normalized.actualAvgTokens,
-            normalized.actualAvgCost,
-            normalized.timestamp
+            stableNumber(normalized.guessTokens),
+            stableNumber(normalized.guessCost),
+            stableNumber(normalized.actualAvgTokens),
+            stableNumber(normalized.actualAvgCost)
         ].join('|');
         if (!deduped.has(key)) {
             deduped.set(key, normalized);
