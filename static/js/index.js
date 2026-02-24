@@ -1,6 +1,7 @@
 window.HELP_IMPROVE_VIDEOJS = false;
 let startGamePending = false;
-const DATA_VERSION = '20260222d';
+const DATA_VERSION = '20260222e';
+const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwz_G-iDXs31FJojcDwvyuZ0cRk4gn3DstIU0UF62rUeOJKu1lqC_XO1H1NDrQa8AnX/exec';
 
 function triggerStartGame(e) {
     if (e) {
@@ -697,9 +698,6 @@ async function recordGuess(guess) {
 
 // Save guess to Google Sheets via Apps Script
 async function saveGuessToGoogleSheets(guess) {
-    // Google Apps Script web app URL
-    const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwz_G-iDXs31FJojcDwvyuZ0cRk4gn3DstIU0UF62rUeOJKu1lqC_XO1H1NDrQa8AnX/exec';
-    
     const formData = new FormData();
     formData.append('problemId', guess.problemId || '');
     formData.append('guessTokens', guess.guessTokens || '');
@@ -720,14 +718,105 @@ async function saveGuessToGoogleSheets(guess) {
     return await response.text();
 }
 
+function normalizeGuessRecord(raw) {
+    if (!raw || typeof raw !== 'object') return null;
+
+    const problemId = raw.problemId || raw.problem_id || raw['Problem ID'] || '';
+    const guessTokens = parseNumber(raw.guessTokens ?? raw['Guess Tokens'] ?? raw.guess_tokens);
+    const guessCost = parseNumber(raw.guessCost ?? raw['Guess Cost'] ?? raw.guess_cost);
+    const actualAvgTokens = parseNumber(raw.actualAvgTokens ?? raw['Actual Avg Tokens'] ?? raw.actual_avg_tokens);
+    const actualAvgCost = parseNumber(raw.actualAvgCost ?? raw['Actual Avg Cost'] ?? raw.actual_avg_cost);
+    const timestamp = raw.timestamp || raw.Timestamp || '';
+
+    if (!problemId && guessTokens <= 0 && guessCost <= 0 && actualAvgTokens <= 0 && actualAvgCost <= 0) {
+        return null;
+    }
+
+    return {
+        problemId,
+        guessTokens,
+        guessCost,
+        actualAvgTokens,
+        actualAvgCost,
+        timestamp
+    };
+}
+
+function mergeGuesses(localGuesses, remoteGuesses) {
+    const deduped = new Map();
+    const combined = [...remoteGuesses, ...localGuesses];
+
+    combined.forEach((guess) => {
+        const normalized = normalizeGuessRecord(guess);
+        if (!normalized) return;
+        const key = [
+            normalized.problemId,
+            normalized.guessTokens,
+            normalized.guessCost,
+            normalized.actualAvgTokens,
+            normalized.actualAvgCost,
+            normalized.timestamp
+        ].join('|');
+        if (!deduped.has(key)) {
+            deduped.set(key, normalized);
+        }
+    });
+
+    return Array.from(deduped.values());
+}
+
+async function fetchGuessesFromGoogleSheets() {
+    try {
+        const response = await fetch(`${GOOGLE_SCRIPT_URL}?action=read&t=${Date.now()}`, {
+            method: 'GET'
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const payloadText = await response.text();
+        let payload = null;
+        try {
+            payload = JSON.parse(payloadText);
+        } catch (error) {
+            console.warn('Google Sheets GET response is not JSON');
+            return [];
+        }
+
+        let rows = [];
+        if (Array.isArray(payload)) {
+            rows = payload;
+        } else if (payload && Array.isArray(payload.data)) {
+            rows = payload.data;
+        } else if (payload && Array.isArray(payload.rows)) {
+            rows = payload.rows;
+        } else if (payload && Array.isArray(payload.guesses)) {
+            rows = payload.guesses;
+        }
+
+        return rows.map(normalizeGuessRecord).filter(Boolean);
+    } catch (error) {
+        console.warn('Failed to load guesses from Google Sheets:', error);
+        return [];
+    }
+}
+
 // Update leaderboard
-function updateLeaderboard() {
+async function updateLeaderboard() {
     const leaderboardBody = document.getElementById('leaderboardTableBody');
     if (!leaderboardBody) {
         return; // Not on the leaderboard page
     }
     
-    const storedGuesses = JSON.parse(localStorage.getItem('tokenGuesses') || '[]');
+    const localGuessesRaw = JSON.parse(localStorage.getItem('tokenGuesses') || '[]');
+    const localGuesses = localGuessesRaw.map(normalizeGuessRecord).filter(Boolean);
+    const remoteGuesses = await fetchGuessesFromGoogleSheets();
+    const storedGuesses = mergeGuesses(localGuesses, remoteGuesses);
+
+    if (storedGuesses.length > 0) {
+        localStorage.setItem('tokenGuesses', JSON.stringify(storedGuesses));
+    }
     
     if (storedGuesses.length === 0) {
         leaderboardBody.innerHTML = `
@@ -773,10 +862,10 @@ function updateLeaderboard() {
             <tr>
                 <td class="${rankClass}">${medal} ${rank}</td>
                 <td>${guess.problemId || 'N/A'}</td>
-                <td>${guess.guessTokens ? guess.guessTokens.toLocaleString() : 'N/A'}</td>
-                <td>${guess.actualAvgTokens ? guess.actualAvgTokens.toLocaleString() : 'N/A'}</td>
-                <td>$${guess.guessCost ? guess.guessCost.toFixed(4) : 'N/A'}</td>
-                <td>$${guess.actualAvgCost ? guess.actualAvgCost.toFixed(4) : 'N/A'}</td>
+                <td>${Number.isFinite(guess.guessTokens) ? guess.guessTokens.toLocaleString() : 'N/A'}</td>
+                <td>${Number.isFinite(guess.actualAvgTokens) ? guess.actualAvgTokens.toLocaleString() : 'N/A'}</td>
+                <td>${Number.isFinite(guess.guessCost) ? '$' + guess.guessCost.toFixed(4) : 'N/A'}</td>
+                <td>${Number.isFinite(guess.actualAvgCost) ? '$' + guess.actualAvgCost.toFixed(4) : 'N/A'}</td>
                 <td>${guess.tokenError.toFixed(2)}%</td>
                 <td>${guess.costError.toFixed(2)}%</td>
                 <td class="${rankClass}"><strong>${guess.combinedError.toFixed(2)}%</strong></td>

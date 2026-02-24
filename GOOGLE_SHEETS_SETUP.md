@@ -21,6 +21,11 @@ This guide explains how to set up Google Sheets to save visitor guesses.
 2. Delete the default code and paste this:
 
 ```javascript
+function toNumber(value) {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : 0;
+}
+
 function doPost(e) {
   try {
     const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
@@ -55,6 +60,38 @@ function doPost(e) {
     })).setMimeType(ContentService.MimeType.JSON);
   }
 }
+
+function doGet(e) {
+  try {
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+    const values = sheet.getDataRange().getValues();
+    if (values.length <= 1) {
+      return ContentService.createTextOutput(JSON.stringify({
+        status: 'success',
+        data: []
+      })).setMimeType(ContentService.MimeType.JSON);
+    }
+
+    const rows = values.slice(1).map((row) => ({
+      problemId: row[0] || '',
+      guessTokens: toNumber(row[1]),
+      guessCost: toNumber(row[2]),
+      actualAvgTokens: toNumber(row[3]),
+      actualAvgCost: toNumber(row[4]),
+      timestamp: row[5] || ''
+    }));
+
+    return ContentService.createTextOutput(JSON.stringify({
+      status: 'success',
+      data: rows
+    })).setMimeType(ContentService.MimeType.JSON);
+  } catch (error) {
+    return ContentService.createTextOutput(JSON.stringify({
+      status: 'error',
+      message: error.toString()
+    })).setMimeType(ContentService.MimeType.JSON);
+  }
+}
 ```
 
 3. Click **Save** (💾) and give your project a name (e.g., "Save Guesses")
@@ -80,7 +117,8 @@ function doPost(e) {
 
 1. Visit your website
 2. Make a guess in the guessing game
-3. Check your Google Sheet - you should see the data appear!
+3. Check your Google Sheet - you should see the data appear
+4. Open the main page on a different machine/browser and verify the leaderboard loads shared rows
 
 ## Alternative: Use Formspree (Even Easier!)
 
