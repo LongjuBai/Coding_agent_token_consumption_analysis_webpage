@@ -1,6 +1,6 @@
 window.HELP_IMPROVE_VIDEOJS = false;
 let startGamePending = false;
-const DATA_VERSION = '20260222g';
+const DATA_VERSION = '20260222h';
 const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzMJ-o51VSfQNhBPcnoWcBcBbi2ZNMLTAJX__9BJSq4tnMj-5yH_5mQ8VFNFxKCqVcM/exec';
 
 
@@ -785,7 +785,7 @@ async function fetchGuessesFromGoogleSheets() {
             payload = JSON.parse(payloadText);
         } catch (error) {
             console.warn('Google Sheets GET response is not JSON');
-            return [];
+            return { ok: false, data: [] };
         }
 
         let rows = [];
@@ -799,10 +799,13 @@ async function fetchGuessesFromGoogleSheets() {
             rows = payload.guesses;
         }
 
-        return rows.map(normalizeGuessRecord).filter(Boolean);
+        return {
+            ok: true,
+            data: rows.map(normalizeGuessRecord).filter(Boolean)
+        };
     } catch (error) {
         console.warn('Failed to load guesses from Google Sheets:', error);
-        return [];
+        return { ok: false, data: [] };
     }
 }
 
@@ -815,11 +818,16 @@ async function updateLeaderboard() {
     
     const localGuessesRaw = JSON.parse(localStorage.getItem('tokenGuesses') || '[]');
     const localGuesses = localGuessesRaw.map(normalizeGuessRecord).filter(Boolean);
-    const remoteGuesses = await fetchGuessesFromGoogleSheets();
-    const storedGuesses = mergeGuesses(localGuesses, remoteGuesses);
+    const remoteResult = await fetchGuessesFromGoogleSheets();
+    let storedGuesses = [];
 
-    if (storedGuesses.length > 0) {
+    if (remoteResult.ok) {
+        // Remote source of truth: reflects row deletions/edits from Google Sheets.
+        storedGuesses = remoteResult.data;
         localStorage.setItem('tokenGuesses', JSON.stringify(storedGuesses));
+    } else {
+        // Fallback for offline/read-error scenarios.
+        storedGuesses = localGuesses;
     }
     
     if (storedGuesses.length === 0) {
