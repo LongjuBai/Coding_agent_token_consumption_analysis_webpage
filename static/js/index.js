@@ -1,7 +1,8 @@
 window.HELP_IMPROVE_VIDEOJS = false;
 let startGamePending = false;
-const DATA_VERSION = '20260222e';
-const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwz_G-iDXs31FJojcDwvyuZ0cRk4gn3DstIU0UF62rUeOJKu1lqC_XO1H1NDrQa8AnX/exec';
+const DATA_VERSION = '20260222f';
+const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzMJ-o51VSfQNhBPcnoWcBcBbi2ZNMLTAJX__9BJSq4tnMj-5yH_5mQ8VFNFxKCqVcM/exec';
+
 
 function triggerStartGame(e) {
     if (e) {
